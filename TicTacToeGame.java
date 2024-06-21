@@ -1,170 +1,152 @@
-import java.util.Random;
-import java.util.Scanner;
+package TICTACTOE;
 
-class TTT{
-    static char[][] board;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
 
-    public TTT(){
-        board = new char[3][3];
-        initBoard();
-    }
+public class TicTacToe {
+    int boardWidth = 600;
+    int boardHeight = 650; //50px for the text panel on top
 
-    void initBoard(){
-        for (int i = 0; i<board.length; i++){
-            for (int j = 0; j<board[i].length; j++){
-                board[i][j] = ' ';
+    JFrame frame = new JFrame("Tic-Tac-Toe");
+    JLabel textLabel = new JLabel();
+    JPanel textPanel = new JPanel();
+    JPanel boardPanel = new JPanel();
+
+    JButton[][] board = new JButton[3][3];
+    String playerX = "X";
+    String playerO = "O";
+    String currentPlayer = playerX;
+
+    boolean gameOver = false;
+    int turns = 0;
+
+    TicTacToe() {
+        frame.setVisible(true);
+        frame.setSize(boardWidth, boardHeight);
+        frame.setLocationRelativeTo(null);
+        frame.setResizable(false);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
+
+        textLabel.setBackground(Color.darkGray);
+        textLabel.setForeground(Color.white);
+        textLabel.setFont(new Font("Arial", Font.BOLD, 50));
+        textLabel.setHorizontalAlignment(JLabel.CENTER);
+        textLabel.setText("Tic-Tac-Toe");
+        textLabel.setOpaque(true);
+
+        textPanel.setLayout(new BorderLayout());
+        textPanel.add(textLabel);
+        frame.add(textPanel, BorderLayout.NORTH);
+
+        boardPanel.setLayout(new GridLayout(3, 3));
+        boardPanel.setBackground(Color.darkGray);
+        frame.add(boardPanel);
+
+        for (int r = 0; r < 3; r++) {
+            for (int c = 0; c < 3; c++) {
+                JButton tile = new JButton();
+                board[r][c] = tile;
+                boardPanel.add(tile);
+
+                tile.setBackground(Color.darkGray);
+                tile.setForeground(Color.white);
+                tile.setFont(new Font("Arial", Font.BOLD, 120));
+                tile.setFocusable(false);
+                // tile.setText(currentPlayer);
+
+                tile.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        if (gameOver) return;
+                        JButton tile = (JButton) e.getSource();
+                        if (tile.getText() == "") {
+                            tile.setText(currentPlayer);
+                            turns++;
+                            checkWinner();
+                            if (!gameOver) {
+                                currentPlayer = currentPlayer == playerX ? playerO : playerX;
+                                textLabel.setText(currentPlayer + "'s turn.");
+                            }
+                        }
+
+                    }
+                });
             }
         }
     }
 
-    static void dispBoard(){
-        System.out.println("-------------");
-        for (int i = 0; i<board.length; i++){
-            System.out.print("| ");
-            for (int j = 0; j<board[i].length; j++){
-                System.out.print(board[i][j] + " | ");
-            }
-            System.out.println();
-            System.out.println("-------------");
-        }
-    }
+    void checkWinner() {
+        //horizontal
+        for (int r = 0; r < 3; r++) {
+            if (board[r][0].getText() == "") continue;
 
-   static void placeMark(int row, int col, char mark){
-        if (row >=0 && row <=2 && col >=0 && col <=2){
-            board[row][col] = mark;
-        }
-        else {
-            System.out.println("Invalid Input");
-        }
-   }
-
-   static boolean checkColWin(){
-        for (int j = 0; j<=2; j++){
-            if ( board[0][j] != ' ' &&  board[0][j] == board[1][j] && board[1][j] == board[2][j]){
-                return true;
+            if (board[r][0].getText() == board[r][1].getText() &&
+                    board[r][1].getText() == board[r][2].getText()) {
+                for (int i = 0; i < 3; i++) {
+                    setWinner(board[r][i]);
+                }
+                gameOver = true;
+                return;
             }
         }
-        return false;
-   }
 
-   static boolean checkRowwin(){
-        for (int i = 0; i<=2; i++){
-            if ( board[i][0] != ' ' &&board[i][0] == board[i][1] && board[i][0] == board[i][1]){
-                return true;
+        //vertical
+        for (int c = 0; c < 3; c++) {
+            if (board[0][c].getText() == "") continue;
+
+            if (board[0][c].getText() == board[1][c].getText() &&
+                    board[1][c].getText() == board[2][c].getText()) {
+                for (int i = 0; i < 3; i++) {
+                    setWinner(board[i][c]);
+                }
+                gameOver = true;
+                return;
             }
         }
-        return false;
-   }
 
-   static boolean checkDiagonalWin(){
-        if (board[0][0] != ' ' &&  board[0][0] == board[1][1] && board[1][1] == board[2][2]
-        ||  board[0][2] != ' ' &&  board[0][2] == board[1][1] && board[1][1] == board[2][0]){
-            return true;
+        //diagonally
+        if (board[0][0].getText() == board[1][1].getText() &&
+                board[1][1].getText() == board[2][2].getText() &&
+                board[0][0].getText() != "") {
+            for (int i = 0; i < 3; i++) {
+                setWinner(board[i][i]);
+            }
+            gameOver = true;
+            return;
         }
-        else{
-            return false;
+
+        //anti-diagonally
+        if (board[0][2].getText() == board[1][1].getText() &&
+                board[1][1].getText() == board[2][0].getText() &&
+                board[0][2].getText() != "") {
+            setWinner(board[0][2]);
+            setWinner(board[1][1]);
+            setWinner(board[2][0]);
+            gameOver = true;
+            return;
         }
 
-   }
-
-   static boolean checkDraw(){
-        for (int i = 0; i<=2; i++){
-            for (int j = 0; j<=2; j++){
-                if (board[i][j] == ' '){
-                    return false;
+        if (turns == 9) {
+            for (int r = 0; r < 3; r++) {
+                for (int c = 0; c < 3; c++) {
+                    setTie(board[r][c]);
                 }
             }
-       }
-        return true;
-   }
-
-}
-abstract class Player{
-    String name;
-    char mark;
-
-    abstract void makeMove();
-    boolean isValidMove(int row, int col){
-        if (row >=0 && row <= 2 &&
-                col >=0 && col <=2){
-            if (TTT.board[row][col] == ' '){
-                return true;
-            }
-        }
-        return false;
-    }
-}
-class HumanPlayer extends Player{
-    HumanPlayer(String name, char mark){
-        this.name = name;
-        this.mark = mark;
-    }
-    void makeMove(){
-        Scanner sc = new Scanner(System.in);
-        int row;
-        int col;
-        do {
-            System.out.println("Enter the row and col");
-            row = sc.nextInt();
-            col = sc.nextInt();
-        }while(!isValidMove(row, col));
-
-        TTT.placeMark(row, col, mark);
-    }
-}
-class AIPlayer extends Player{
-    AIPlayer(String name, char mark){
-        this.name = name;
-        this.mark = mark;
-    }
-    void makeMove(){
-        Scanner sc = new Scanner(System.in);
-        int row;
-        int col;
-        do {
-            Random r = new Random();
-            row = r.nextInt(3);
-            col = r.nextInt(3);
-        }while(!isValidMove(row, col));
-
-        TTT.placeMark(row, col, mark);
-    }
-}
-
-public class TicTacToeGame {
-    public static void main(String[] args){
-        TTT t = new TTT();
-
-    HumanPlayer p1 = new HumanPlayer("Bob",'X');
-    //HumanPlayer p2 = new HumanPlayer("Sujal", 'O');
-    AIPlayer p2 = new AIPlayer("TAI",'O');
-    Player cp;
-    cp = p1;
-
-    while (true){
-        System.out.println(cp.name + " turn");
-        cp.makeMove();
-
-        TTT.dispBoard();
-
-        if (TTT.checkColWin() || TTT.checkRowwin()
-                || TTT.checkDiagonalWin()){
-            System.out.println(cp.name + " has won ");
-            break;
-        }
-        else if (TTT.checkDraw()) {
-            System.out.println("game is draw");
-            break;
-        }
-        else {
-            if (cp == p1){
-                cp = p2;
-            }
-            else {
-                cp = p1;
-            }
+            gameOver = true;
         }
     }
+
+    void setWinner(JButton tile) {
+        tile.setForeground(Color.green);
+        tile.setBackground(Color.gray);
+        textLabel.setText(currentPlayer + " is the winner!");
     }
 
+    void setTie(JButton tile) {
+        tile.setForeground(Color.orange);
+        tile.setBackground(Color.gray);
+        textLabel.setText("Tie!");
+    }
 }
+
